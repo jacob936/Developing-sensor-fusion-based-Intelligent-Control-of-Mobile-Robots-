@@ -1,0 +1,14 @@
+ASMC vs PID COMPARISON
+==================================================
+
+ASMC file: asmc_1776922120.csv
+PID file:  pid_tune_1776923730.csv
+
+METRICS
+----------------------------------------
+Metric                  ASMC          PID
+RMSE                   1.256        1.261
+Max                    2.146        2.130
+Mean                   1.126        1.133
+IAE_v                 31.941       29.920
+ISE_v                  4.746        4.488

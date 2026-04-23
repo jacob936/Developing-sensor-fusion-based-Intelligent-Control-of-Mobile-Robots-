@@ -1,0 +1,25 @@
+THESIS EXPERIMENT METADATA
+============================================================
+
+Experiment: Experiment 2: PID + Adaptive EKF
+Controller: PID (Proportional-Integral-Derivative)
+State Estimator: Adaptive EKF
+Environment: Warehouse - Wide Perimeter Waypoints
+Date: 2026-04-23
+CSV File: /root/sensor_fusion_ws/experiment_data/pid_tune_1776923730.csv
+
+PERFORMANCE METRICS
+----------------------------------------
+Samples: 125
+Duration: 197.9 seconds
+RMSE: 1.261 m
+Max Error: 2.130 m
+Mean Error: 1.133 m
+Std Dev: 0.554 m
+
+CONTROL EFFORT
+----------------------------------------
+IAE (velocity): 29.92
+ISE (velocity): 4.49
+IAE (angular): 19.96
+ISE (angular): 11.72

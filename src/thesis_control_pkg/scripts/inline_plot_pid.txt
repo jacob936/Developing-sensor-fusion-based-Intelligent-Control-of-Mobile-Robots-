@@ -1,0 +1,152 @@
+python3 << 'ENDPYTHON'
+import pandas as pd, numpy as np, matplotlib.pyplot as plt, os, glob
+from datetime import datetime
+
+# Configuration
+csv_file = "/root/sensor_fusion_ws/experiment_data/pid_tune_1776923730.csv"
+output_dir = "/root/sensor_fusion_ws/experiment_data/exp2_pid/"
+os.makedirs(output_dir, exist_ok=True)
+
+# Experiment metadata (for thesis)
+EXPERIMENT_NAME = "Experiment 2: PID + Adaptive EKF"
+CONTROLLER = "PID (Proportional-Integral-Derivative)"
+ESTIMATOR = "Adaptive EKF"
+ENVIRONMENT = "Warehouse - Wide Perimeter Waypoints"
+DATE = datetime.now().strftime("%Y-%m-%d")
+
+# Load data
+df = pd.read_csv(csv_file)
+print(f"Loaded {len(df)} samples from {csv_file}")
+
+# Compute metrics
+rmse = np.sqrt(np.mean(df['error_dist']**2))
+max_err = np.max(df['error_dist'])
+mean_err = np.mean(df['error_dist'])
+std_err = np.std(df['error_dist'])
+duration = df['time_sec'].max() - df['time_sec'].min()
+
+print(f"\n📈 PID Metrics:")
+print(f"   RMSE: {rmse:.3f} m")
+print(f"   Max Error: {max_err:.3f} m")
+print(f"   Mean Error: {mean_err:.3f} m")
+print(f"   Std Dev: {std_err:.3f} m")
+print(f"   Duration: {duration:.1f} s")
+print(f"   Samples: {len(df)}")
+
+# ============ PLOT 1: TRAJECTORY ============
+plt.figure(figsize=(9, 9))
+plt.plot(df['ref_x'], df['ref_y'], 'go--', label='Reference Waypoints', markersize=10, linewidth=2, alpha=0.8)
+plt.plot(df['state_x'], df['state_y'], 'r-', label='PID Trajectory', linewidth=2, alpha=0.9)
+plt.plot(df['state_x'].iloc[0], df['state_y'].iloc[0], 'ks', markersize=15, label='Start', zorder=5)
+plt.plot(df['state_x'].iloc[-1], df['state_y'].iloc[-1], 'r*', markersize=20, label='End', zorder=5)
+
+# Add experiment info box
+info_text = f'{EXPERIMENT_NAME}\n{CONTROLLER}\n{ESTIMATOR}\nRMSE: {rmse:.3f} m'
+plt.text(0.02, 0.98, info_text, transform=plt.gca().transAxes, fontsize=9,
+         verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
+
+plt.xlabel('X Position (m)', fontsize=12, fontweight='bold')
+plt.ylabel('Y Position (m)', fontsize=12, fontweight='bold')
+plt.title(f'{EXPERIMENT_NAME}\n{CONTROLLER} + {ESTIMATOR}', fontsize=14, fontweight='bold', pad=20)
+plt.legend(loc='best', fontsize=10)
+plt.grid(True, alpha=0.3, linestyle='--')
+plt.axis('equal')
+plt.tight_layout()
+traj_file = os.path.join(output_dir, '01_pid_trajectory.png')
+plt.savefig(traj_file, dpi=300, bbox_inches='tight')
+plt.close()
+print(f"✓ Saved: {os.path.basename(traj_file)}")
+
+# ============ PLOT 2: TRACKING ERROR ============
+plt.figure(figsize=(11, 5))
+plt.plot(df['time_sec'], df['error_dist'], 'r-', linewidth=2, label='Tracking Error', alpha=0.9)
+plt.axhline(y=rmse, color='red', linestyle='--', linewidth=2, label=f'RMSE = {rmse:.3f} m')
+plt.axhline(y=mean_err, color='green', linestyle=':', linewidth=2, label=f'Mean = {mean_err:.3f} m')
+plt.axhline(y=max_err, color='orange', linestyle='-.', linewidth=1.5, label=f'Max = {max_err:.3f} m')
+
+# Add experiment info box
+info_text = f'{CONTROLLER}\n{ESTIMATOR}'
+plt.text(0.02, 0.95, info_text, transform=plt.gca().transAxes, fontsize=9,
+         verticalalignment='top', bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.3))
+
+plt.xlabel('Time (seconds)', fontsize=12, fontweight='bold')
+plt.ylabel('Tracking Error (meters)', fontsize=12, fontweight='bold')
+plt.title(f'{EXPERIMENT_NAME}: Tracking Error Over Time\n{CONTROLLER} + {ESTIMATOR}', 
+          fontsize=14, fontweight='bold', pad=15)
+plt.legend(loc='upper right', fontsize=10)
+plt.grid(True, alpha=0.3, linestyle='--')
+plt.tight_layout()
+error_file = os.path.join(output_dir, '02_pid_error.png')
+plt.savefig(error_file, dpi=300, bbox_inches='tight')
+plt.close()
+print(f"✓ Saved: {os.path.basename(error_file)}")
+
+# ============ PLOT 3: CONTROL SIGNALS ============
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
+
+# Linear velocity
+ax1.plot(df['time_sec'], df['cmd_v'], 'r-', linewidth=2, label='Commanded v', alpha=0.9)
+ax1.axhline(y=0.22, color='gray', linestyle=':', linewidth=1, label='Max Limit (0.22 m/s)', alpha=0.5)
+ax1.set_ylabel('Linear Velocity (m/s)', fontsize=11, fontweight='bold')
+ax1.set_title(f'Control Commands - {CONTROLLER}', fontsize=12, fontweight='bold', pad=10)
+ax1.legend(loc='upper right', fontsize=9)
+ax1.grid(True, alpha=0.3, linestyle='--')
+ax1.set_ylim(-0.05, 0.25)
+
+# Angular velocity
+ax2.plot(df['time_sec'], df['cmd_omega'], 'b-', linewidth=2, label='Commanded ω', alpha=0.9)
+ax2.axhline(y=1.0, color='gray', linestyle=':', linewidth=1, label='Max Limit (±1.0 rad/s)', alpha=0.5)
+ax2.axhline(y=-1.0, color='gray', linestyle=':', linewidth=1, alpha=0.5)
+ax2.set_xlabel('Time (seconds)', fontsize=11, fontweight='bold')
+ax2.set_ylabel('Angular Velocity (rad/s)', fontsize=11, fontweight='bold')
+ax2.legend(loc='upper right', fontsize=9)
+ax2.grid(True, alpha=0.3, linestyle='--')
+ax2.set_ylim(-1.2, 1.2)
+
+# Add estimator info
+fig.text(0.5, 0.02, f'State Estimator: {ESTIMATOR} | Environment: {ENVIRONMENT}', 
+         ha='center', fontsize=10, style='italic', alpha=0.7)
+
+plt.tight_layout(rect=[0, 0.03, 1, 0.97])
+control_file = os.path.join(output_dir, '03_pid_control.png')
+plt.savefig(control_file, dpi=300, bbox_inches='tight')
+plt.close()
+print(f"✓ Saved: {os.path.basename(control_file)}")
+
+# ============ SAVE METRICS FILE ============
+dt = np.diff(df['time_sec']).mean() if len(df) > 1 else 0.5
+iae_v = np.sum(np.abs(df['cmd_v'])) * dt
+ise_v = np.sum(df['cmd_v']**2) * dt
+iae_w = np.sum(np.abs(df['cmd_omega'])) * dt
+ise_w = np.sum(df['cmd_omega']**2) * dt
+
+with open(os.path.join(output_dir, '00_experiment_metadata.txt'), 'w') as f:
+    f.write('THESIS EXPERIMENT METADATA\n')
+    f.write('=' * 60 + '\n\n')
+    f.write(f'Experiment: {EXPERIMENT_NAME}\n')
+    f.write(f'Controller: {CONTROLLER}\n')
+    f.write(f'State Estimator: {ESTIMATOR}\n')
+    f.write(f'Environment: {ENVIRONMENT}\n')
+    f.write(f'Date: {DATE}\n')
+    f.write(f'CSV File: {csv_file}\n\n')
+    f.write('PERFORMANCE METRICS\n')
+    f.write('-' * 40 + '\n')
+    f.write(f'Samples: {len(df)}\n')
+    f.write(f'Duration: {duration:.1f} seconds\n')
+    f.write(f'RMSE: {rmse:.3f} m\n')
+    f.write(f'Max Error: {max_err:.3f} m\n')
+    f.write(f'Mean Error: {mean_err:.3f} m\n')
+    f.write(f'Std Dev: {std_err:.3f} m\n\n')
+    f.write('CONTROL EFFORT\n')
+    f.write('-' * 40 + '\n')
+    f.write(f'IAE (velocity): {iae_v:.2f}\n')
+    f.write(f'ISE (velocity): {ise_v:.2f}\n')
+    f.write(f'IAE (angular): {iae_w:.2f}\n')
+    f.write(f'ISE (angular): {ise_w:.2f}\n')
+
+print(f"✓ Saved: 00_experiment_metadata.txt")
+print(f"\n✅ All thesis-ready plots saved to: {output_dir}")
+print(f"📁 Files created:")
+for f in sorted(os.listdir(output_dir)):
+    print(f"   - {f}")
+ENDPYTHON

@@ -1,0 +1,29 @@
+cat > /root/sensor_fusion_ws/src/thesis_control_pkg/worlds/empty_world.world << 'ENDOFFILE'
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <world name="empty_world">
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    
+    <!-- Sun light -->
+    <light name="sun" type="directional">
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <cast_shadows>true</cast_shadows>
+    </light>
+    
+    <!-- Scene settings -->
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+    </scene>
+  </world>
+</sdf>
+ENDOFFILE
+
+
+
+

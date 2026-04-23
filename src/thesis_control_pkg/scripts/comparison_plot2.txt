@@ -1,0 +1,103 @@
+python3 << 'ENDPYTHON'
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# Load both files
+asmc_df = pd.read_csv('/root/sensor_fusion_ws/experiment_data/asmc_1776926688.csv')
+pid_df = pd.read_csv('/root/sensor_fusion_ws/experiment_data/pid_tune_1776923730.csv')
+
+# Compute metrics for both
+def compute_metrics(df):
+    rmse = np.sqrt(np.mean(df['error_dist']**2))
+    max_err = np.max(df['error_dist'])
+    mean_err = np.mean(df['error_dist'])
+    dt = np.diff(df['time_sec']).mean() if len(df) > 1 else 0.05
+    iae_v = np.sum(np.abs(df['cmd_v'])) * dt
+    ise_v = np.sum(df['cmd_v']**2) * dt
+    return {'RMSE': rmse, 'Max': max_err, 'Mean': mean_err, 'IAE_v': iae_v, 'ISE_v': ise_v}
+
+asmc_m = compute_metrics(asmc_df)
+pid_m = compute_metrics(pid_df)
+
+print(f"\n📊 COMPARISON SUMMARY")
+print(f"{'Metric':<15} {'ASMC':>12} {'PID':>12} {'Better':>10}")
+print("-"*50)
+for key in ['RMSE', 'Max', 'Mean', 'IAE_v', 'ISE_v']:
+    a, p = asmc_m[key], pid_m[key]
+    better = "ASMC" if a < p else "PID" if p < a else "Tie"
+    print(f"{key:<15} {a:>12.3f} {p:>12.3f} {better:>10}")
+
+# ===== COMPARISON TRAJECTORY =====
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
+
+# ASMC
+ref_x1 = asmc_df['ref_x'].drop_duplicates().values
+ref_y1 = asmc_df['ref_y'].drop_duplicates().values
+ax1.plot(ref_x1, ref_y1, 'go--', markersize=8, alpha=0.6)
+ax1.plot(asmc_df['state_x'], asmc_df['state_y'], 'b-', linewidth=1.5)
+ax1.plot(asmc_df['state_x'].iloc[0], asmc_df['state_y'].iloc[0], 'ks', markersize=12)
+ax1.plot(asmc_df['state_x'].iloc[-1], asmc_df['state_y'].iloc[-1], 'r*', markersize=15)
+ax1.set_title(f'ASMC\nRMSE: {asmc_m["RMSE"]:.3f}m', fontsize=11, fontweight='bold')
+ax1.set_xlabel('X (m)'); ax1.set_ylabel('Y (m)')
+ax1.grid(True, alpha=0.3); ax1.axis('equal')
+
+# PID
+ref_x2 = pid_df['ref_x'].drop_duplicates().values
+ref_y2 = pid_df['ref_y'].drop_duplicates().values
+ax2.plot(ref_x2, ref_y2, 'go--', markersize=8, alpha=0.6)
+ax2.plot(pid_df['state_x'], pid_df['state_y'], 'r-', linewidth=1.5)
+ax2.plot(pid_df['state_x'].iloc[0], pid_df['state_y'].iloc[0], 'ks', markersize=12)
+ax2.plot(pid_df['state_x'].iloc[-1], pid_df['state_y'].iloc[-1], 'r*', markersize=15)
+ax2.set_title(f'PID\nRMSE: {pid_m["RMSE"]:.3f}m', fontsize=11, fontweight='bold')
+ax2.set_xlabel('X (m)'); ax2.set_ylabel('Y (m)')
+ax2.grid(True, alpha=0.3); ax2.axis('equal')
+
+plt.suptitle('Controller Comparison: Trajectory Tracking', fontsize=14, fontweight='bold', y=1.02)
+plt.tight_layout()
+plt.savefig('/root/sensor_fusion_ws/experiment_data/comparison_plots/01_comparison_trajectory.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("✓ Saved: 01_comparison_trajectory.png")
+
+# ===== COMPARISON ERROR =====
+plt.figure(figsize=(10, 5))
+plt.plot(asmc_df['time_sec'], asmc_df['error_dist'], 'b-', linewidth=1.5, label=f'ASMC (RMSE={asmc_m["RMSE"]:.3f}m)', alpha=0.8)
+plt.plot(pid_df['time_sec'], pid_df['error_dist'], 'r-', linewidth=1.5, label=f'PID (RMSE={pid_m["RMSE"]:.3f}m)', alpha=0.8)
+plt.xlabel('Time (s)'); plt.ylabel('Tracking Error (m)')
+plt.title('Controller Comparison: Tracking Error', fontsize=12, fontweight='bold')
+plt.legend(fontsize=10); plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('/root/sensor_fusion_ws/experiment_data/comparison_plots/02_comparison_error.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("✓ Saved: 02_comparison_error.png")
+
+# ===== LATEX TABLE =====
+with open('/root/sensor_fusion_ws/experiment_data/comparison_plots/03_comparison_table.tex', 'w') as f:
+    f.write('\\begin{table}[h]\n\\centering\n')
+    f.write('\\caption{ASMC vs PID Controller Performance}\n\\label{tab:asmc_pid}\n')
+    f.write('\\begin{tabular}{lccc}\n\\toprule\n')
+    f.write('\\textbf{Metric} & \\textbf{ASMC} & \\textbf{PID} & \\textbf{Better} \\\\\n\\midrule\n')
+    for key, label in [('RMSE', 'RMSE (m)'), ('Max', 'Max Error (m)'), ('Mean', 'Mean Error (m)'), 
+                        ('IAE_v', 'IAE$_v$'), ('ISE_v', 'ISE$_v$')]:
+        a, p = asmc_m[key], pid_m[key]
+        better = "ASMC" if a < p else "PID" if p < a else "Tie"
+        f.write(f'{label} & {a:.3f} & {p:.3f} & {better} \\\\\n')
+    f.write('\\bottomrule\n\\end{tabular}\n\\end{table}\n')
+print("✓ Saved: 03_comparison_table.tex")
+
+# ===== METRICS FILE =====
+with open('/root/sensor_fusion_ws/experiment_data/comparison_plots/00_comparison_metrics.txt', 'w') as f:
+    f.write('ASMC vs PID COMPARISON\n')
+    f.write('='*50 + '\n\n')
+    f.write(f'ASMC file: asmc_1776922120.csv\n')
+    f.write(f'PID file:  pid_tune_1776923730.csv\n\n')
+    f.write('METRICS\n')
+    f.write('-'*40 + '\n')
+    f.write(f'{"Metric":<15} {"ASMC":>12} {"PID":>12}\n')
+    for key in ['RMSE', 'Max', 'Mean', 'IAE_v', 'ISE_v']:
+        f.write(f'{key:<15} {asmc_m[key]:>12.3f} {pid_m[key]:>12.3f}\n')
+print("✓ Saved: 00_comparison_metrics.txt")
+
+print(f"\n✅ All comparison plots saved to: /root/sensor_fusion_ws/experiment_data/comparison_plots/")
+ENDPYTHON

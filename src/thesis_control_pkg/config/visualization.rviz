@@ -1,0 +1,62 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Value: true
+    
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Description Topic: /robot_description
+      Value: true
+    
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Topic: /scan
+      Size: 0.05
+      Value: true
+    
+    - Class: rviz_default_plugins/Path
+      Name: Reference Path
+      Topic: /reference_path
+      Color: 0; 255; 0
+      Line Width: 0.05
+      Value: true
+    
+    - Class: rviz_default_plugins/Path
+      Name: Safe Path
+      Topic: /safe_reference_path
+      Color: 255; 0; 0
+      Line Width: 0.05
+      Value: true
+    
+    - Class: rviz_default_plugins/PoseWithCovariance
+      Name: Estimated State
+      Topic: /state_estimated
+      Covariance:
+        Position: true
+        Orientation: true
+      Value: true
+  
+  Global Options:
+    Fixed Frame: odom
+    Frame Rate: 30
+  
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 10
+      Name: Current View
+      Pitch: 0.5
+      Yaw: 0.7854

@@ -1,0 +1,19 @@
+/**:
+  ros__parameters:
+    # ASMC Parameters
+    lambda_param: 1.0
+    k_min: 0.5
+    alpha: 2.0
+    phi: 0.1
+    
+    # EKF Parameters
+    process_noise: [0.01, 0.01, 0.001, 0.001, 0.001]
+    odom_noise: [0.01, 0.01, 0.001]
+    imu_noise: [0.001]
+    innovation_threshold: 3.0
+    adaptation_rate: 0.1
+    
+    # Safety Layer
+    obstacle_threshold: 0.5
+    repulsive_gain: 1.0
+    safe_distance: 0.3

@@ -1,0 +1,25 @@
+THESIS EXPERIMENT METADATA
+============================================================
+
+Experiment: Experiment 1: ASMC + Adaptive Ekf
+Controller: ASMC (Adaptive Sliding Mode Control)
+State Estimator: Adaptive EKF
+Environment: Warehouse - Wide Perimeter Waypoints
+Date: 2026-04-23
+CSV File: /root/sensor_fusion_ws/experiment_data/asmc_1776926688.csv
+
+PERFORMANCE METRICS
+----------------------------------------
+Samples: 125
+Duration: 213.8 seconds
+RMSE: 1.256 m
+Max Error: 2.146 m
+Mean Error: 1.126 m
+Std Dev: 0.557 m
+
+CONTROL EFFORT
+----------------------------------------
+IAE (velocity): 31.94
+ISE (velocity): 4.75
+IAE (angular): 19.09
+ISE (angular): 9.58

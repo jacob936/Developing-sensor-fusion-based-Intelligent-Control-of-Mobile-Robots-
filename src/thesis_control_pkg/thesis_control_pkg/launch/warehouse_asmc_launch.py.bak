@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+from launch import LaunchDescription
+from launch_ros.actions import Node
+import os
+
+os.environ['TURTLEBOT3_MODEL'] = 'burger'
+
+def generate_launch_description():
+    return LaunchDescription([
+        # All nodes must use use_sim_time=True for Gazebo
+        Node(
+            package='thesis_control_pkg',
+            executable='adaptive_ekf_node',
+            name='adaptive_ekf',
+            output='screen',
+            parameters=[…sim_time': True}],
+        ),
+        Node(
+            package='thesis_control_pkg',
+            executable='safety_layer_node',
+            name='safety_layer',
+            output='screen',
+            parameters=[{'use_sim_time': True}],
+        ),
+        Node(
+            package='thesis_control_pkg',
+            executable='trajectory_generator_node',
+            name='trajectory_generator',
+            output='screen',
+            parameters=[{'use_sim_time': True}],
+        ),
+    ])

@@ -1,0 +1,32 @@
+# External dependencies (install separately)
+src/turtlebot3/
+src/turtlebot3_msgs/
+src/turtlebot3_simulations/
+
+# Experiment data (too large)
+experiment_data/*.csv
+experiment_data/*.png
+
+# Build directories
+build/
+install/
+log/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# ROS2 build files
+*.cmake
+CMakeCache.txt
+
+# Environment files
+.env
+.venv/
+thesis_env/
+
+# Large files
+*.bag
+*.db
+
