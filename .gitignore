@@ -30,3 +30,11 @@ thesis_env/
 *.bag
 *.db
 
+# Large system files - never commit
+core
+core.*
+*.dump
+
+# ROS bag files (too large for GitHub)
+*.bag
+*.db3
